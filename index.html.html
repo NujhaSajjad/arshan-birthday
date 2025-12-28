@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Birthday Diary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ff9a9e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Floating Doodles */
+        .doodle {
+            position: fixed;
+            font-size: 2em;
+            opacity: 0.3;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .doodle:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .doodle:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
+        .doodle:nth-child(3) { bottom: 15%; left: 20%; animation-delay: 2s; }
+        .doodle:nth-child(4) { bottom: 25%; right: 10%; animation-delay: 1.5s; }
+        .doodle:nth-child(5) { top: 50%; left: 5%; animation-delay: 0.5s; }
+        .doodle:nth-child(6) { top: 60%; right: 5%; animation-delay: 2.5s; }
+
+        /* Diary Book */
+        .diary-container {
+            perspective: 2000px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .diary-book {
+            width: 700px;
+            height: 550px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        /* Page styling */
+        .page {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-origin: left center;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        .page-content {
+            width: 100%;
+            height: 100%;
+            background: #fff8f0;
+            border: 3px solid #d4a574;
+            border-left: 20px solid #8b6914;
+            box-shadow: 
+                5px 5px 15px rgba(0,0,0,0.3),
+                inset 0 0 30px rgba(210, 180, 140, 0.2);
+            padding: 50px;
+            position: relative;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Diary lines effect */
+        .page-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 40px;
+            width: calc(100% - 60px);
+            height: 100%;
+            background: repeating-linear-gradient(
+                transparent,
+                transparent 39px,
+                #e8d5c4 39px,
+                #e8d5c4 41px
+            );
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Binding holes */
+        .page-content::after {
+            content: '';
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 80%;
+            background: 
+                radial-gradient(circle, #8b6914 3px, transparent 3px) 0 0,
+                radial-gradient(circle, #8b6914 3px, transparent 3px) 0 30px,
+                radial-gradient(circle, #8b6914 3px, transparent 3px) 0 60px;
+            background-size: 8px 30px;
+            background-repeat: repeat-y;
+        }
+
+        .page.flipped {
+            transform: rotateY(-180deg);
+            z-index: 1;
+        }
+
+        .page.hidden {
+            display: none;
+        }
+
+        /* Password Page */
+        .password-page {
+            text-align: center;
+        }
+
+        .password-page h2 {
+            color: #ff6b9d;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(255, 107, 157, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .lock-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .password-page input {
+            width: 80%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 3px solid #ff6b9d;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.8);
+            font-family: 'Comic Sans MS', cursive;
+            position: relative;
+            z-index: 1;
+        }
+
+        .password-page input:focus {
+            outline: none;
+            border-color: #ff1493;
+            box-shadow: 0 0 15px rgba(255, 107, 157, 0.5);
+        }
+
+        .password-page button {
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff1493 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-family: 'Comic Sans MS', cursive;
+            box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+
+        .password-page button:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            display: none;
+            font-size: 1.1em;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Cake Page */
+        .cake-page {
+            text-align: center;
+        }
+
+        .cake {
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cake-body {
+            width: 180px;
+            height: 140px;
+            background: linear-gradient(to bottom, #ffb6c1, #ff69b4, #ff1493);
+            margin: 0 auto 20px;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.5);
+        }
+
+        .frosting {
+            width: 100%;
+            height: 25px;
+            background: white;
+            border-radius: 15px 15px 0 0;
+            position: absolute;
+            top: -12px;
+        }
+
+        .cherry {
+            width: 25px;
+            height: 25px;
+            background: #dc143c;
+            border-radius: 50%;
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 3px 10px rgba(220, 20, 60, 0.5);
+        }
+
+        .cherry::after {
+            content: '';
+            width: 3px;
+            height: 15px;
+            background: #8b4513;
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .cake-layer {
+            width: 200px;
+            height: 25px;
+            background: #fff;
+            margin: -10px auto 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .candles {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: -80px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .candle {
+            width: 10px;
+            height: 60px;
+            background: repeating-linear-gradient(
+                45deg,
+                #ff6b9d,
+                #ff6b9d 8px,
+                #ffb6c1 8px,
+                #ffb6c1 16px
+            );
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .flame {
+            width: 15px;
+            height: 22px;
+            background: radial-gradient(circle, #ffff00, #ffa500);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: absolute;
+            top: -22px;
+            left: -2.5px;
+            animation: flicker 0.3s infinite alternate;
+            box-shadow: 0 0 20px #ffa500;
+        }
+
+        @keyframes flicker {
+            0% { transform: scale(1) translateY(0); }
+            100% { transform: scale(1.15) translateY(-3px); }
+        }
+
+        .blow-instruction {
+            margin-top: 100px;
+            color: #ff1493;
+            font-size: 1.2em;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+
+        /* Birthday Page */
+        .birthday-page h1 {
+            font-size: 3.8em;
+            margin-bottom: 30px;
+            animation: rainbow 3s linear infinite;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes rainbow {
+            0% { color: #ff6b9d; }
+            25% { color: #ffd700; }
+            50% { color: #00ff00; }
+            75% { color: #1e90ff; }
+            100% { color: #ff6b9d; }
+        }
+
+        /* Wish Page */
+        .wish-page h2 {
+            color: #ff6b9d;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(255, 107, 157, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .wish-page p {
+            color: #333;
+            font-size: 1.3em;
+            line-height: 1.9;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Message Page */
+        .message-page h2 {
+            color: #ff6b9d;
+            font-size: 2.3em;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(255, 107, 157, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .message-page p {
+            color: #333;
+            font-size: 1.15em;
+            line-height: 2;
+            text-align: justify;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .signature {
+            text-align: right;
+            font-style: italic;
+            color: #ff1493;
+            margin-top: 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        .page-nav {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            font-size: 1.1em;
+            color: #8b6914;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .flip-hint {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            color: #ff6b9d;
+            font-size: 1em;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid #ff6b9d;
+            font-weight: bold;
+        }
+
+        .flip-hint:hover {
+            transform: scale(1.1);
+            background: rgba(255, 107, 157, 0.2);
+        }
+
+        /* Decorative elements */
+        .corner-decoration {
+            position: absolute;
+            font-size: 2em;
+            z-index: 1;
+        }
+
+        .corner-decoration.top-left { top: 20px; left: 40px; }
+        .corner-decoration.top-right { top: 20px; right: 40px; }
+        .corner-decoration.bottom-left { bottom: 60px; left: 40px; }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Hearts floating */
+        .heart {
+            position: fixed;
+            font-size: 1.5em;
+            animation: heartFloat 8s ease-in-out infinite;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        @keyframes heartFloat {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Doodles -->
+    <div class="doodle">ðŸŒŸ</div>
+    <div class="doodle">ðŸŽˆ</div>
+    <div class="doodle">ðŸŽ‚</div>
+    <div class="doodle">ðŸŽ</div>
+    <div class="doodle">ðŸŽ‰</div>
+    <div class="doodle">ðŸ’•</div>
+
+    <div class="diary-container">
+        <div class="diary-book">
+            <!-- Page 1: Password -->
+            <div class="page" id="page1">
+                <div class="page-content password-page">
+                    <div class="corner-decoration top-left">âœ¨</div>
+                    <div class="corner-decoration top-right">âœ¨</div>
+                    <div class="lock-icon">ðŸ”’</div>
+                    <h2>Enter the Secret Code</h2>
+                    <input type="password" id="passwordInput" placeholder="Enter password">
+                    <br>
+                    <button onclick="checkPassword()">Unlock Diary âœ¨</button>
+                    <p class="error" id="errorMsg">Oops! Wrong password! Try again ðŸ’</p>
+                </div>
+            </div>
+
+            <!-- Page 2: Cake -->
+            <div class="page hidden" id="page2">
+                <div class="page-content cake-page">
+                    <div class="corner-decoration top-left">ðŸŽˆ</div>
+                    <div class="corner-decoration top-right">ðŸŽˆ</div>
+                    <div class="cake" onclick="blowCandles()">
+                        <div class="candles">
+                            <div class="candle"><div class="flame"></div></div>
+                            <div class="candle"><div class="flame"></div></div>
+                            <div class="candle"><div class="flame"></div></div>
+                        </div>
+                        <div class="cake-body">
+                            <div class="frosting"></div>
+                            <div class="cherry"></div>
+                        </div>
+                        <div class="cake-layer"></div>
+                    </div>
+                    <p class="blow-instruction">âœ¨ Click to make a wish! âœ¨</p>
+                    <div class="page-nav">Page 1</div>
+                </div>
+            </div>
+
+            <!-- Page 3: Birthday -->
+            <div class="page hidden" id="page3">
+                <div class="page-content birthday-page">
+                    <div class="corner-decoration top-left">ðŸŽ‰</div>
+                    <div class="corner-decoration top-right">ðŸŽŠ</div>
+                    <h1>HAPPY<br>BIRTHDAY!</h1>
+                    <div class="flip-hint" onclick="flipToNext(3)">Turn Page âžœ</div>
+                    <div class="page-nav">Page 2</div>
+                </div>
+            </div>
+
+            <!-- Page 4: Wish -->
+            <div class="page hidden" id="page4">
+                <div class="page-content wish-page">
+                    <div class="corner-decoration top-left">ðŸ’«</div>
+                    <div class="corner-decoration top-right">â­</div>
+                    <h2>My Wish For You</h2>
+                    <p>
+                        ðŸ¤âœ¨Wishing you so much happiness and success always! I'm honestly really grateful to have you as my online friend. You've been a constant source of laughs, support, and good vibes, and our random talks always make my day better. I hope this brings you even more reasons to smile and achieve everything you're dreaming of.ðŸŒ¸âœ¨
+                    </p>
+                    <div class="flip-hint" onclick="flipToNext(4)">Turn Page âžœ</div>
+                    <div class="page-nav">Page 3</div>
+                </div>
+            </div>
+
+            <!-- Page 5: Message -->
+            <div class="page hidden" id="page5">
+                <div class="page-content message-page">
+                    <div class="corner-decoration top-left">ðŸ’</div>
+                    <div class="corner-decoration top-right">ðŸ’•</div>
+                    <h2>A Special Message</h2>
+                    <p>
+                        We've enjoyed so much time together in different group chats ðŸ˜­ðŸ˜‚ðŸ’¬ and honestly, those moments mean a lot to me ðŸ’ž I love you for your crazy, fun energy and the way you make everything entertaining ðŸ¤âœ¨ Even though sometimes, when you start talking way too much about Bot, you really test my patience ðŸ˜¤ðŸ˜‚ â€” but that's just you, and I still love you for it ðŸ’•ðŸ¥¹ Our friendship is truly special to me ðŸ’–ðŸ¤
+                    </p>
+                    <p class="signature">With love and best wishes,<br>Your Friend ðŸ’•</p>
+                    <div class="page-nav">Page 4</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIO -->
+    <audio id="bgMusic" loop>
+        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_b092e2c3c8.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // ===== CUSTOMIZE THESE VALUES =====
+        const correctPassword = "Arshan";  // CHANGE THIS to your password
+        // =====================================
+
+        const music = document.getElementById('bgMusic');
+        let currentPage = 1;
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            const error = document.getElementById('errorMsg');
+            
+            if (input === correctPassword) {
+                error.style.display = 'none';
+                music.play();
+                createConfetti();
+                createFloatingHearts();
+                flipToNext(1);
+            } else {
+                error.style.display = 'block';
+                document.getElementById('passwordInput').style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    document.getElementById('passwordInput').style.animation = '';
+                }, 500);
+            }
+        }
+
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        function blowCandles() {
+            document.querySelectorAll('.flame').forEach(flame => {
+                flame.style.animation = 'none';
+                flame.style.opacity = '0';
+            });
+            setTimeout(() => {
+                flipToNext(2);
+            }, 1000);
+        }
+
+        function flipToNext(pageNum) {
+            const currentPageEl = document.getElementById('page' + pageNum);
+            const nextPageEl = document.getElementById('page' + (pageNum + 1));
+            
+            if (nextPageEl) {
+                currentPageEl.classList.add('flipped');
+                nextPageEl.classList.remove('hidden');
+                currentPage = pageNum + 1;
+            }
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 80; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = ['#ff6b9d', '#ffd700', '#4ecdc4', '#ff1493', '#ffb6c1', '#00ff00'][Math.floor(Math.random() * 6)];
+                    confetti.style.animationDelay = Math.random() * 3 + 's';
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = confetti.style.width;
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 50);
+            }
+        }
+
+        function createFloatingHearts() {
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerText = ['ðŸ’•', 'ðŸ’–', 'ðŸ’—', 'ðŸ’'][Math.floor(Math.random() * 4)];
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                heart.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(heart);
+                
+                setTimeout(() => heart.remove(), 10000);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
